@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 ###### PERSONAL ACCESS TOKEN FOR ENTSO-E TRANSPARENCY MUST BE DEFINED ########
-with open('token.txt','rt') as f:
-        req_token = f.readline()
-if req_token == '':
-    raise Exception("WARNING: Missing access token for Transparency platform in 'token.txt'")
+try:
+    with open('token.txt','rt') as f:
+            req_token = f.readline()
+    if req_token == '':
+        raise Exception("WARNING: Missing access token for transparency platform in 'token.txt'")
+except FileNotFoundError:
+    raise Exception("WARNING: Add file 'token.txt' with access token for transparency platform to repository")
 
 """ Database with ENTSO-E transparency data. Data is downloaded 
     in xml format from the transparency server using a required
