@@ -1,0 +1,8 @@
+# Files to ignore in project
+
+# api files
+token.txt
+
+# other folders
+.idea
+__pycache__
