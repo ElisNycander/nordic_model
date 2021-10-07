@@ -1,6 +1,6 @@
 # nordic_model
 
-This is an open dispatch model for the north European power system. More details of the model are provided in REF. If you use the whole or parts of the model, please cite the paper. 
+This is an open dispatch model for the north European power system. More details of the model are provided in [1]. If you use the whole or parts of the model, please cite the paper. 
 
 USE OF MODEL
 
@@ -16,3 +16,8 @@ To use the model, perform the following steps:
 MODEL OPTIONS 
 
 The model options are documented in the code, in default_options() in the Model class.
+
+
+REFERENCES:
+
+[1] E. Nycander and L. Söder, "An Open Dispatch Model for the Nordic Power System", Preprint, 2021, doi: https://doi.org/10.13140/RG.2.2.31948.74884/1.
