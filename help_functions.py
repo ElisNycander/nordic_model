@@ -191,7 +191,7 @@ def intersection(lst1,lst2):
     lst3 = [value for value in lst1 if value in lst2] 
     return lst3 
 
-def str_to_date(strdate):
+def str_to_date(strdate,timestamp=True):
     """ Take a string with a date and return datetime object
     Allowed formats: 
         'YYYYMMDD'
@@ -218,9 +218,13 @@ def str_to_date(strdate):
         if hour == 24:
             hour = 0
             day += 1
-        return datetime.datetime(year,month,day,hour,min)
+        d = datetime.datetime(year,month,day,hour,min)
     else:
-        return datetime.datetime(year,month,day)
+        d = datetime.datetime(year,month,day)
+    if timestamp:
+        return pd.Timestamp(d)
+    else:
+        return d
             
 
 def week_to_date(weekstr):
