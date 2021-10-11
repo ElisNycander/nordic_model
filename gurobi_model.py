@@ -13,6 +13,7 @@ class GurobiModel:
 
         self.gm = gp.Model(name)
         self.name = name
+        self.api = 'gurobi'
 
     def setup_opt_problem(self,m,highres=False,delta=None):
         """

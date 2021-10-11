@@ -23,6 +23,7 @@ class PyomoModel(ConcreteModel):
     def __init__(self):
         # call ConcreteModel constructor
         super(PyomoModel,self).__init__()
+        self.api = 'pyomo'
 
     def setup_opt_problem(self,m):
         """

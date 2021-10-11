@@ -31,8 +31,6 @@ import matplotlib.dates as mdates
 from pathlib import Path
 import datetime
 import os
-import csv
-from itertools import islice
 import pyomo.environ as pye
 from contextlib import redirect_stdout
 
@@ -42,14 +40,11 @@ from contextlib import redirect_stdout
 import maf_hydro_data
 import maf_pecd_data
 import entsoe_transparency_db as entsoe
-from help_functions import find_overlimit_events, compact_xaxis_ticks, \
-    week_to_range, str_to_date, find_str, intersection, duration_curve, interp_time, \
+from help_functions import compact_xaxis_ticks, \
+    week_to_range, str_to_date, intersection, duration_curve, interp_time, \
     interpolate_weekly_values, time_to_bin, err_func, curtailment_statistics
 
 ### INTERNAL MODULES ###
-from pyomo_model import PyomoModel
-from gurobi_model import GurobiModel
-from pyomo_init_model import PyomoInitModel
 from offer_curves import SupplyCurve
 from model_definitions import MWtoGW, GWtoMW, cm_per_inch, std_fig_size, area_to_country, country_to_areas, entsoe_type_map, synchronous_areas, colors, \
     nordpool_capacities, generators_def, solver_executables, solver_stats, bidz2maf_pecd, co2_price_ets, \
@@ -736,10 +731,12 @@ class Model:
         solver = self.opt_solver
         # Choose child model "cm" class depending on api type
         if api == 'gurobi' and solver == 'gurobi':
+            from gurobi_model import GurobiModel
             self.cm = GurobiModel(name=self.name)
         else:
             if api == 'gurobi':
                 print(f'WARNING: Can only use gurobi api with gurobi, using pyomo api!')
+            from pyomo_model import PyomoModel
             self.cm = PyomoModel()
 
         self.cm.setup_opt_problem(self)
@@ -808,7 +805,7 @@ class Model:
         if not hasattr(self,'cm'):
             print('Model does not have child model, run "setup_child_model"')
             return None
-        elif type(self.cm) is PyomoModel:
+        elif self.cm.api == 'pyomo': # pyomo model
 
             ## DECLARE DUAL
             if not hasattr(self.cm,'dual'):
@@ -826,7 +823,7 @@ class Model:
             self.res_stats = {
                 name:res['problem'][0][solver_stats['pyomo'][name]] for name in solver_stats['pyomo']
             }
-        else:
+        else: # gurobi model
             if not prt:
                 self.cm.gm.setParam('OutputFlag',0)
             self.cm.gm.optimize()
@@ -907,11 +904,14 @@ class Model:
         if prt:
             print('------- INIT MODEL COMPLETE ---')
         self.res_time['ini'] = time.time() - t_0
+
     def setup_init_model(self):
         """
         This sets up a low resolution model, which is solved to get values with which to initialize the hourly model
         :return:
         """
+        from pyomo_init_model import PyomoInitModel
+
         print_output = self.opt_print['init']
         self.ini = EmptyObject()
         t0 = time.time()
