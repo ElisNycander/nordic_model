@@ -791,13 +791,48 @@ class Database():
         conn.close()  
 
         # drop nan columns
-        # df.dropna(how='all',axis=1,inplace=True)
-        df.fillna(0,inplace=True)
+        df = df.dropna(how='all',axis=1)
+        df = df.fillna(0)
         # drop zero columns
-        nzeros = (df == 0).sum()
-        df.drop(columns=[c for c in df.columns if nzeros[c] == df.__len__()],inplace=True)
+        # nzeros = (df == 0).sum()
+        # df.drop(columns=[c for c in df.columns if nzeros[c] == df.__len__()],inplace=True)
         return df
-        
+
+    def select_cap_per_type_year(self,areas,year):
+        """ Select capacity data for given year """
+        table = 'cap_per_type'
+        conn = sqlite3.connect(self.db)
+        c = conn.cursor()
+
+        # create columns
+        if areas is None:
+            # check which areas exist
+            cmd = f'SELECT DISTINCT area FROM {table}'
+            c.execute(cmd)
+            area_list = []
+            for row in c.fetchall():
+                area_list.append(row[0])
+        else:
+            area_list = areas
+
+        types = list(tpsr_key.keys())
+        df = pd.DataFrame(dtype=float,index=area_list,columns=types)
+
+        # read data into df
+        cmd = f"SELECT area,type,cap FROM cap_per_type WHERE year in ({year})"
+        if areas is not None:
+            cmd += f" AND area in {create_select_list(areas)}"
+        # print(cmd)
+        c.execute(cmd)
+        for row in c.fetchall():
+            df.at[(row[0],row[1])] = float(row[2])
+        conn.close()
+
+        # drop nan columns
+        df = df.dropna(how='all',axis=1)
+
+        return df
+
     def download_gen_per_type_data(self,start_year = 2015,end_year=2018,areas = []):
         """ Download actual generation by production type for all bidding areas.
         The data is saved to the table "gen_per_type" in the given database:
@@ -3035,13 +3070,13 @@ class Database():
         # def get_entsoe_capacity(year=2020,areas=['FI','DI'],db='D:/Data/entsoe_gen_capacity.db'):
         # db = entsoe_transparency_db.Database(db=db)
 
-        df = self.select_cap_per_type_data(areas=areas)
+        df = self.select_cap_per_type_year(areas,year)
         cap_df = pd.DataFrame(dtype=float,index=areas,columns=list(entsoe_type_map.keys()))
         for a in areas:
             for g in entsoe_type_map:
-                types = [gg for gg in entsoe_type_map[g] if (a,gg) in df.columns]
+                types = [gg for gg in entsoe_type_map[g] if gg in df.columns]
                 if types:
-                    cap_df.at[a,g] = df.loc[year,[(a,gg) for gg in types]].sum()
+                    cap_df.at[a,g] = df.loc[a,types].sum()
 
         se_cap = get_se_capacity()
         se_areas = [a for a in ['SE1','SE2','SE3','SE4'] if a in areas]
@@ -5741,3 +5776,13 @@ if __name__ == "__main__":
     pd.set_option('display.max_rows',100)
     pd.set_option('display.max_columns',None)
 
+
+    #%%
+    db = Database('D:/Data/capacity.db')
+    # areas = ['SE1','FI','DE']
+    from model_definitions import all_areas as areas
+    year = 2020
+    # def get_entsoe_capacity(year=2020,areas=['FI','DI'],db='D:/Data/entsoe_gen_capacity.db'):
+    # db = entsoe_transparency_db.Database(db=db)
+
+    df = db.select_capacity_wrap(year,areas)
