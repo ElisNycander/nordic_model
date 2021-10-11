@@ -276,7 +276,8 @@ def compact_xaxis_ticks(f,ax):
             if not s is None: # replace \n by ' '
                 tx = tx[:s.span()[0]] + ' ' + tx[s.span()[0]+1:]
             labls.append(tx)
-        ax.set_xticklabels(labls) 
+        ax.set_xticks(ax.get_xticks().tolist())
+        ax.set_xticklabels(labls)
     
 def find_overlimit_events(s,thrs):
     """
