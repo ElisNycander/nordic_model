@@ -96,51 +96,6 @@ def splitnonalpha(s):
       pos+=1
    return (s[:pos], s[pos:])
 
-def read_excel_table(file,worksheet = None,headers = [],srow = 1):
-    """ Reads any excel data table into list. Each row is stored as a dictionary 
-    in the list, with it's values stored using the column names as keys. Assumes
-    the excel file contains headers in the first row. 
-    Inputs: 
-        file - complete file path 
-        worksheet - name of worksheed to read 
-        headers - list of headers, if different from headers specified in sheet
-        srow - starting row 
-    Outputs:
-        data - list of dictionaries, one for each data row
-        fields - dictionary keys, same as headers
-    """
-    
-    wb = openpyxl.load_workbook(file)
-    
-    if worksheet is None: # select first worksheet
-        ws = wb.worksheets[0]
-    else: # select named worksheet
-        ws = wb[worksheet]
-
-    # first row contains header
-    if headers == [] or headers.__len__() != ws.max_column:
-        fields = [ws.cell(srow,i).value for i in range(1,ws.max_column+1)]
-    else:
-        fields = headers
-            
-    # Header may span multiple rows, increment row counter until we find
-    # first non-empty cell
-    srow = srow + 1
-    while ws.cell(srow,1).value is None:
-        srow = srow + 1
-        
-    # read all rows as dicts into list 
-    data = []
-    for i in range(srow,ws.max_row+1):
-        d = {}
-        for j in range(1,ws.max_column+1):
-            d[fields[j-1]] = ws.cell(i,j).value
-        data.append(d)    
-        
-    wb.close()
-    
-    return (data,fields)
-
 def new_zero_dict(params):
     """ Create a new dictionary with zero/empty fields taken from params """
     d = {}
