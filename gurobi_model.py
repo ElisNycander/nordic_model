@@ -769,14 +769,7 @@ class GurobiModel:
             [m.opt_loadshed_cost*MWtoGW for a in self.set_AREA for t in self.set_TIME],
             [self.var_LS[a,t] for a in self.set_AREA for t in self.set_TIME]
         )
-        # load shedding cost, load shed = max_D - var_D
-        # obj.addTerms(
-        #     [-m.opt_loadshed_cost*MWtoGW for a in self.set_AREA for t in self.set_TIME],
-        #     [self.var_D[a,t] for a in self.set_AREA for t in self.set_TIME]
-        # )
-        # obj.addConstant(
-        #     sum( m.opt_loadshed_cost*MWtoGW*self.max_val['D'][(a,t)] for a in self.set_AREA for t in self.set_TIME )
-        # )
+
         # net imports
         obj.addTerms(
             [-MWtoGW*m.price_external.at[m.timerange[t],m.xtrans_ext.at[x,'to']] for x in self.set_XEXT_VAR for t in self.set_TIME],
