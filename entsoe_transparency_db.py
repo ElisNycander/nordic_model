@@ -430,9 +430,10 @@ miss_load_data_periods = [('NO1',('20190208','20190211')),
                           ('NO5',('20190208','20190211')),
                           ('LT',('20180101','20180102')),]
 
-# fixes of individual values
+# fixes of individual values, in UTC time
 gen_per_type_fixes = (('DK1','20191104:07','Waste',100),
-                      ('DK1','20160531:09','Gas',140),)
+                      ('DK1','20160531:09','Gas',140),
+                      ('LT','20180107:06','Other',19))
 
 # in UTC time
 load_fixes = (('GB','20190126:0930',40253),
@@ -1616,7 +1617,7 @@ class Database():
                         print(f'Dropping columns for {a}: {dcols}')
                     df.drop(columns=dcols,inplace=True)
 
-        data_raw = fix_gen_data_manual(data_raw)
+        data_raw = fix_gen_data_manual(data_raw,cet_time)
         # replace missing zero data with nan values
         fix_zero_perios(data_raw,print_output=print_output)
 
@@ -4688,7 +4689,7 @@ def fix_zero_perios(dic,ncols_drop=4,print_output=True):
             if print_output:
                 print(f'{area}: replaced {fix_vals_count} hourly zero values with nan for {fix_period_count} periods')
 
-def fix_gen_data_manual(data_raw):
+def fix_gen_data_manual(data_raw,cet_time=False):
     """ Some manual fixes to the entsoe generation data, i.e. remove outliers, replace days with missing data """
 
     tfmt = '%Y%m%d:%H'
@@ -4702,6 +4703,8 @@ def fix_gen_data_manual(data_raw):
     for area,tstr,gtype,val in gen_per_type_fixes:
         if area in data_raw:
             t = datetime.datetime.strptime(tstr,tfmt)
+            if cet_time:
+                t += datetime.timedelta(hours=1)
             if t in data_raw[area].index and gtype in data_raw[area].columns:
                 data_raw[area].at[t,gtype] = val
 
