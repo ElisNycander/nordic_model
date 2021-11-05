@@ -1271,6 +1271,8 @@ class Model:
                         if prt:
                             print(f'No entso-e capacity value for {area} {gtype}')
                 pmin = stats.at['min',(area,gtype)]
+                if pmin > pmax: # pmin value from production stats may exceed capacity, fix this
+                    pmin = 0
                 rampup = stats.at['maxramp',(area,gtype)]
                 rampdown = stats.at['minramp',(area,gtype)]
 
@@ -3678,7 +3680,4 @@ if __name__ == "__main__":
     # # save run
     # m.save_model_run()
     # m.run_years(append=True,years=[2015,2016])
-
-
-
 
