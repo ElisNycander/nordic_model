@@ -6,6 +6,8 @@ in case_studies.py.
 
 from nordic_model import Model
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 if __name__ == "__main__":
 
@@ -47,3 +49,4 @@ if __name__ == "__main__":
     # run single year
     m.run(save_model=True)
 
+    #%%
