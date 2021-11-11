@@ -1,6 +1,6 @@
 # nordic_model
 
-This is an open dispatch model for the north European power system. More details of the model are provided in [1]. If you use the whole or parts of the model, please cite the paper. 
+This is ODIN, an Open DIspatch model for the Nordic power system. More details of the model are provided in [1]. If you use the whole or parts of the model, please cite the paper. 
 
 USE OF MODEL
 
