@@ -6,3 +6,7 @@ token.txt
 # other folders
 .idea
 __pycache__
+Figures
+
+# private files
+thesis_results.py
