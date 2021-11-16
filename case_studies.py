@@ -11,6 +11,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+import datetime
+from help_functions import str_to_date
+from model_definitions import MWtoGW
 
 
 db_path = 'D:/Data/Model Release'
@@ -570,6 +573,20 @@ def validation(year=2019,path='D:/NordicModel/Runs'):
 
     m.fopt_use_titles = False
     m.fopt_eps = True
+    # m.fopt_plots = {
+    #     'gentype':True,
+    #     'gentot':True,
+    #     'gentot_bar':False,
+    #     'transfer_internal':True,
+    #     'transfer_external':True,
+    #     'reservoir':True,
+    #     'price':True,
+    #     'losses':False,
+    #     'load_curtailment':False,
+    #     'inertia':False,
+    #     'hydro_duration':False,
+    #     'wind_curtailment':False,
+    # }
     m.fopt_plots = {
         'gentype':True,
         'gentot':True,
@@ -599,6 +616,7 @@ def validation(year=2019,path='D:/NordicModel/Runs'):
 
     m.run(save_model=True)
 
+    return m
 
 def case_study_example(years=range(1982,2017),path='D:/NordicModel/Runs'):
     """ illustrative case study """
@@ -781,8 +799,139 @@ def paper_results(path='D:/NordicModel/PaperRuns',fig_path='D:/NordicModel/Paper
                                            path=path,fig_path=fig_path)
     return df
 
+def run_cost_compare_cases():
+    """ Run cases to compare using constant and shifting marginal costs """
+
+    import matplotlib.dates as mdates
+
+    path = 'D:/NordicModel/ThesisRuns'
+    fig_path = 'D:/NordicModel/Figures'
+    area = 'DK1'
+    gen = 21
+    year = 2018
+
+    #%% compare runs with weekly/constant marginal cost offset
+
+    for tag in ['mw','mavg']:
+        casename = f'mcompare_{year}_{tag}'
+        # casename = 'test'
+        # db_path = 'D:/Data/'
+        m = Model(name=casename, path=path, db_path=db_path,data_path=data_path)
+        m.default_options()
+
+        if tag == 'mw':
+            m.opt_use_var_cost = True
+        else:
+            m.opt_use_var_cost = False
+
+        m.opt_countries = ['NO','FI','SE','DK','LV','EE','LT','PL','DE','NL','GB']
+
+        m.opt_start = f'{year}0101'
+        m.opt_end = f'{year}1230'
+        m.opt_costfit_tag = f'{year}'
+        m.opt_capacity_year = year
+        m.opt_weather_year = year
+
+        m.opt_solver = 'gurobi'
+        m.opt_api = 'gurobi'
+
+        m.fopt_use_titles = False
+        m.fopt_eps = False
+        m.fopt_plots = {
+            'gentype':True,
+            'gentot':True,
+            'gentot_bar':False,
+            'transfer_internal':False,
+            'transfer_external':False,
+            'reservoir':True,
+            'price':False,
+            'losses':False,
+            'load_curtailment':False,
+            'inertia':False,
+            'hydro_duration':False,
+            'wind_curtailment':False,
+        }
+        m.fopt_calc_rmse = {
+            'price':True,
+            'transfer':True,
+        }
+
+        m.opt_print = {
+            'init':True,
+            'solver':True,
+            'setup':True,
+            'postprocess':True,
+            'check':True,
+        }
+
+        m.run(save_model=True)
+
+
+
+    #%% compare thermal generation for different runs
+
+    m1 = Model(name='mcompare_2018_mw',path=path)
+    m1.load_model()
+
+    m2 = Model(name='mcompare_2018_mavg',path=path)
+    m2.load_model()
+
+    #%%
+
+    inset_days = 8
+    inset_date = '20180401:00'
+    inset_idx = pd.date_range(start=str_to_date(inset_date),
+                              end=str_to_date(inset_date)+datetime.timedelta(days=inset_days),
+                              freq='H')
+    ax2_width = 0.6
+    # legend position with inset
+    bbox = (0.99,1.5) # horizontal, vertical
+    inset_height_ratio = [1,1.6]
+    myFmt = '%m-%d'
+
+    # f,ax = plt.subplots()
+    f = plt.figure()
+    ax1,ax2 = f.subplots(2,1,gridspec_kw={'height_ratios':inset_height_ratio})
+    pos = ax1.get_position()
+    ax1.set_position([pos.x0,pos.y0,ax2_width,pos.height])
+
+    #% divide figure
+
+
+    #% main plot
+    m1.res_PG[gen].plot(ax=ax2,label='m',color='C0')
+    m2.res_PG[gen].plot(ax=ax2,label='mavg',color='C2')
+
+    (m.entsoe_data[area]['Thermal']*MWtoGW).plot(ax=ax2,label='data',color='C1',linestyle='dashed',linewidth=0.9)
+
+    ax2.set_ylabel('GWh')
+    ax2.set_zorder(1)
+    ax2.grid()
+    # remove line breaks from ticks
+    from help_functions import compact_xaxis_ticks
+    compact_xaxis_ticks(f,ax2)
+    # ax1.legend([],title=self.plot_vals.annstr.format(irmse_rel,irmse),bbox_to_anchor=self.plot_vals.bbox)
+    ax2.legend(bbox_to_anchor=bbox)
+
+
+    #% inset
+    ax1.plot(m1.res_PG.loc[inset_idx,gen],label='m',color='C0')
+    ax1.plot(m2.res_PG.loc[inset_idx,gen],label='mavg',color='C2')
+    ax1.plot(m.entsoe_data[area].loc[inset_idx,'Thermal']*MWtoGW,label='data',color='C1',linestyle='dashed',linewidth=0.9)
+
+    ax1.grid()
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter(myFmt))
+    ax1.set_ylabel('GWh')
+    ax1.xaxis.set_major_locator(mdates.DayLocator())
+
+    plt.savefig(Path(fig_path) / f'cost_compare_{area}.png')
+    plt.savefig(Path(fig_path) / f'cost_compare_{area}.eps')
+
 if __name__ == "__main__":
 
-    df = paper_results()
+    # df = paper_results()
     pass
+
+    # run_cost_compare_cases()
+    # m = validation(year=2019,path='D:/NordicModel/PaperRuns')
 
