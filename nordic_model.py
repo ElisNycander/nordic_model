@@ -2713,7 +2713,10 @@ class Model:
         # f = plt.gcf()
         f.clf()
         f.set_size_inches(6.4,4.8)
-        f.set_tight_layout(False)
+        # f.set_size_inches(6.8,4.8)
+        # f.set_tight_layout(False)
+        # plt.figure(f)
+        # plt.tight_layout()
         return f
 
     def plot_figures(self):
@@ -2731,7 +2734,7 @@ class Model:
         }
         # settings without inset
         self.plot_vals.legend_pos = 'best'
-        self.plot_vals.simple_plot_size = (17,10)
+        self.plot_vals.simple_plot_size = (6,4)
         # settings for inset
         self.plot_vals.myFmt = "%m-%d"
 
@@ -2748,9 +2751,11 @@ class Model:
                                                  freq='H')
         self.plot_vals.ax2_width = 0.55
         # legend position with inset
-        self.plot_vals.bbox = (0.72,1.02) # horizontal, vertical
+        self.plot_vals.bbox = (0.77,1.02) # horizontal, vertical
         self.plot_vals.inset_height_ratio = [1,1.6]
+        self.plot_vals.leg_loc = (0.77,1.15) # legend position
 
+        self.plot_vals.xpad = 0.04 # more space between left edge and start of x-axes
         self.plot_vals.colors = {'Hydro':'skyblue',
                   'Slow':'#ff7f0e',
                   'Fast':'#d62728',
@@ -2846,12 +2851,13 @@ class Model:
                         # f = plt.gcf()
                         # f.clf()
                         f = self.get_fig()
-                        # f.set_size_inches()
-                        f.set_size_inches(6.8,4.8)
                         ax2,ax1 = f.subplots(2,1,gridspec_kw={'height_ratios':self.plot_vals.inset_height_ratio})
                         # f,(ax2,ax1) = plt.subplots(2,1,gridspec_kw={'height_ratios':self.plot_vals.inset_height_ratio})
                         pos = ax2.get_position()
-                        ax2.set_position([pos.x0,pos.y0,self.plot_vals.ax2_width,pos.height])
+                        ax2.set_position([pos.x0+self.plot_vals.xpad,pos.y0,self.plot_vals.ax2_width,pos.height])
+
+                        pos = ax1.get_position()
+                        ax1.set_position([pos.x0+self.plot_vals.xpad,pos.y0,pos.width-self.plot_vals.xpad,pos.height])
 
                         # main plot
                         if gtype == 'Hydro':
@@ -2929,9 +2935,9 @@ class Model:
                             plt.title('{2}: {1} production {0}'.format(area,gtype,self.name))
                         plt.ylabel('GWh')
 
-                        plt.tight_layout()
-                        plt.gcf().set_size_inches(self.plot_vals.simple_plot_size[0]/cm_per_inch,self.plot_vals.simple_plot_size[1]/cm_per_inch)
-
+                        # plt.tight_layout()
+                        # plt.gcf().set_size_inches(self.plot_vals.simple_plot_size[0],self.plot_vals.simple_plot_size[1])
+                        compact_xaxis_ticks(f,ax)
                     ############ save figure ##########
 
                     plt.savefig(self.fig_path / 'gen_by_type_{0}_{1}.png'.format(area,gtype))
@@ -3017,15 +3023,20 @@ class Model:
                 ax2,ax1 = f.subplots(2,1,gridspec_kw={'height_ratios':self.plot_vals.inset_height_ratio})
                 # f,(ax2,ax1) = plt.subplots(2,1,gridspec_kw={'height_ratios':self.plot_vals.inset_height_ratio})
                 pos = ax2.get_position()
-                ax2.set_position([pos.x0,pos.y0,self.plot_vals.ax2_width,pos.height])
+                ax2.set_position([pos.x0+self.plot_vals.xpad,pos.y0,self.plot_vals.ax2_width,pos.height])
 
-                rmse = self.res_rmse_area.at[area,'Prod']
+                pos = ax1.get_position()
+                ax1.set_position([pos.x0+self.plot_vals.xpad,pos.y0,pos.width-self.plot_vals.xpad,pos.height])
+
+                irmse = self.res_rmse_area.at[area,'Prod']
                 norm = self.res_rmse_area_norm.at[area,'Prod']
-                rmse_rel = rmse/norm
+                irmse_rel = irmse/norm
                 # main plot
                 plot_data.plot(ax=ax1)
-                ax1.legend(['model','data',],title=self.plot_vals.annstr.format(rmse_rel,rmse),
-                           bbox_to_anchor=self.plot_vals.bbox)
+                ax1.legend(['model','data'],title=self.plot_vals.annstr.format(irmse_rel,irmse),
+                           loc=self.plot_vals.leg_loc)
+
+
                 ax1.set_ylabel('GWh')
                 if self.fopt_use_titles:
                     f.suptitle('{0}: Total production {1}'.format(self.name,area))
@@ -3162,7 +3173,10 @@ class Model:
                 ax2,ax1 = f.subplots(2,1,gridspec_kw={'height_ratios':self.plot_vals.inset_height_ratio})
                 # f,(ax2,ax1) = plt.subplots(2,1,gridspec_kw={'height_ratios':self.plot_vals.inset_height_ratio})
                 pos = ax2.get_position()
-                ax2.set_position([pos.x0,pos.y0,self.plot_vals.ax2_width,pos.height])
+                ax2.set_position([pos.x0+self.plot_vals.xpad,pos.y0,self.plot_vals.ax2_width,pos.height])
+
+                pos = ax1.get_position()
+                ax1.set_position([pos.x0+self.plot_vals.xpad,pos.y0,pos.width-self.plot_vals.xpad,pos.height])
 
                 # main plot
                 plot_data.plot(ax=ax1,color=['C0','C1','k','k'],style=['-','-','--','--'])
@@ -3203,6 +3217,9 @@ class Model:
             if self.fopt_plots['transfer_external'] and not self.fopt_no_plots:
                 f = self.get_fig()
                 ax = self.res_XEXT[conn].plot()
+
+                pos = ax.get_position()
+                ax.set_position([pos.x0+self.plot_vals.xpad,pos.y0,pos.width-self.plot_vals.xpad,pos.height])
                 plt.grid()
                 plt.ylabel('GWh')
                 # plot nordpool values
@@ -3239,6 +3256,8 @@ class Model:
             if self.fopt_plots['transfer_external'] and not self.fopt_no_plots:
                 f = self.get_fig()
                 ax = self.res_xext[conn].plot()
+                pos = ax.get_position()
+                ax.set_position([pos.x0+self.plot_vals.xpad,pos.y0,pos.width-self.plot_vals.xpad,pos.height])
                 if self.fopt_use_titles:
                     plt.title('{2}: {0} -> {1} (fixed)'.format(self.xtrans_ext.at[conn,'from'],self.xtrans_ext.at[conn,'to'],self.name))
                 plt.grid()
@@ -3287,6 +3306,8 @@ class Model:
                 # ax = self.res_RES[area].plot()
                 f = self.get_fig()
                 ax = plot_RES.plot()
+                pos = ax.get_position()
+                ax.set_position([pos.x0+self.plot_vals.xpad,pos.y0,pos.width-self.plot_vals.xpad,pos.height])
                 xdata = ax.lines[0].get_xdata()
                 # plt.plot(ax.lines[0].get_xdata(),self.reservoir_hourly.loc[self.res_RES[area].index,area])
                 if area in self.reservoir_hourly:
@@ -3366,20 +3387,24 @@ class Model:
                 if prt and dummy:
                     dummy = False
                     print('Plot prices')
-                # get axes
-                # f = plt.gcf()
-                # f.clf()
+
                 f = self.get_fig()
                 ax2,ax1 = f.subplots(2,1,gridspec_kw={'height_ratios':self.plot_vals.inset_height_ratio})
-                # f,(ax2,ax1) = plt.subplots(2,1,gridspec_kw={'height_ratios':self.plot_vals.inset_height_ratio})
                 pos = ax2.get_position()
-                ax2.set_position([pos.x0,pos.y0,self.plot_vals.ax2_width,pos.height])
+                ax2.set_position([pos.x0+self.plot_vals.xpad,pos.y0,self.plot_vals.ax2_width,pos.height])
+
+                pos = ax1.get_position()
+                ax1.set_position([pos.x0+self.plot_vals.xpad,pos.y0,pos.width-self.plot_vals.xpad,pos.height])
 
                 (self.dual_constr_POWER_BALANCE[area]/MWtoGW).plot(ax=ax1)
 
                 # plot calculated prices
                 #plt.plot(ax.lines[0].get_xdata(),self.res_prices.loc[:,area])
                 plt.plot(ax1.lines[0].get_xdata(),self.df_price_internal.loc[:,area])
+
+                ax1.legend(['model','data',],title=self.plot_vals.annstr.format(irmse_rel,irmse),
+                       loc=self.plot_vals.leg_loc)
+
                 ylim_padding = 5
                 ax1.set_ylim([min([min(l.get_ydata()) for l in ax1.lines])-ylim_padding,max([max(l.get_ydata())
                                                                                    for l in ax1.lines])+ylim_padding])
@@ -3399,8 +3424,6 @@ class Model:
                 ax1.set_ylabel('EUR/MWh')
                 if self.fopt_use_titles:
                     f.suptitle('{1}: Price {0}'.format(area,self.name))
-                ax1.legend(['Model dual price','Nordpool price',],title=self.plot_vals.annstr.format(irmse_rel,irmse),
-                                          bbox_to_anchor=self.plot_vals.bbox)
 
                 plt.savefig(self.fig_path/'price_{0}.png'.format(area))
                 if self.fopt_eps:
@@ -3424,8 +3447,6 @@ class Model:
             #%
             # f,ax = plt.subplots()
             f = self.get_fig()
-            f.set_size_inches(6,3.8)
-            # f.set_size_inches(6.4,4.8)
             ax = f.subplots()
             price_df.plot.bar(ax=ax)
             plt.grid()
@@ -3461,7 +3482,7 @@ class Model:
                 if self.fopt_use_titles:
                     plt.title(f"{a} wind curtailment duration for case {self.name}")
                 plt.grid()
-                plt.tight_layout()
+                # plt.tight_layout()
 
                 plt.savefig(Path(self.fig_path) / Path(f"wcur_duration_{a}.png"))
                 if self.fopt_eps:
@@ -3483,7 +3504,7 @@ class Model:
             # f,ax = plt.subplots()
             f = self.get_fig()
             ax = f.add_axes()
-            f.set_size_inches(std_fig_size)
+            # f.set_size_inches(std_fig_size)
             for col,style,lw in zip(careas,lss+lss,lws+lws): # 16 styles should be enough
                 cur[col].plot(style=style,lw=lw,ax=ax)
             plt.legend(careas)
@@ -3495,7 +3516,7 @@ class Model:
             if self.fopt_use_titles:
                 plt.title(f'Wind curtailment duration curves for case {self.name}')
             plt.grid()
-            plt.tight_layout()
+            # plt.tight_layout()
 
             plt.savefig(Path(self.fig_path) / Path(f"wcur_duration_tot.png"))
             if self.fopt_eps:
@@ -3589,7 +3610,7 @@ class Model:
                     if self.fopt_use_titles:
                         plt.title(f"Duration curve hydro {a}")
                     plt.grid()
-                    plt.tight_layout()
+                    # plt.tight_layout()
                     plt.legend(['Model','Data'])
                     plt.savefig(Path(self.fig_path) / Path(f"hydro_duration_{a}.png"))
                     if self.fopt_eps:
