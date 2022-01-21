@@ -20,4 +20,4 @@ The model options are documented in the code, in default_options() in the Model 
 
 REFERENCES:
 
-[1] E. Nycander and L. Söder, "An Open Dispatch Model for the Nordic Power System", Preprint, 2021, doi: https://doi.org/10.13140/RG.2.2.31948.74884/1.
+[1] E. Nycander and L. Söder, "An open dispatch model for the Nordic power system", Energy Strategy Reviews, Volume 39, 2022, doi: https://doi.org/10.1016/j.esr.2021.100775.
