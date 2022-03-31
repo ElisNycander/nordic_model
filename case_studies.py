@@ -927,8 +927,87 @@ def run_cost_compare_cases():
     plt.savefig(Path(fig_path) / f'cost_compare_{area}.png')
     plt.savefig(Path(fig_path) / f'cost_compare_{area}.eps')
 
-if __name__ == "__main__":
+def plot_cost_compare_cases():
 
+    import matplotlib.dates as mdates
+    path = 'D:/NordicModel/ThesisRuns'
+    fig_path = 'D:/NordicModel/Figures'
+    area = 'DK1'
+    gen = 21
+    year = 2018
+    starttime = f'{year}0101'
+    endtime = f'{year}1230'
+    cet = False
+    #%% compare thermal generation for different runs
+
+    m1 = Model(name='mcompare_2018_mw',path=path)
+    m1.load_model()
+
+    m2 = Model(name='mcompare_2018_mavg',path=path)
+    m2.load_model()
+
+    from entsoe_transparency_db import Database
+
+    db = Database('D:/Data/gen.db')
+    gen_dic = db.select_gen_per_type_wrap_v2(starttime=starttime,endtime=endtime,areas=[area],cet_time=cet)
+
+    #%%
+
+    inset_days = 8
+    inset_date = '20180401:00'
+    inset_idx = pd.date_range(start=str_to_date(inset_date),
+                              end=str_to_date(inset_date)+datetime.timedelta(days=inset_days),
+                              freq='H')
+    ax2_width = 0.6
+    # legend position with inset
+    bbox = (1.06,1.75) # horizontal, vertical
+    inset_height_ratio = [1,1.6]
+    myFmt = '%m-%d'
+
+    # f,ax = plt.subplots()
+    f = plt.figure()
+    ax1,ax2 = f.subplots(2,1,gridspec_kw={'height_ratios':inset_height_ratio})
+    pos = ax1.get_position()
+    ax1.set_position([pos.x0,pos.y0,ax2_width,pos.height])
+
+    #% divide figure
+
+
+    #% main plot
+    m1.res_PG[gen].plot(ax=ax2,label='m (weekly)',color='C0')
+    m2.res_PG[gen].plot(ax=ax2,label='m (avg)',color='C2')
+
+    (gen_dic[area]['Thermal']*MWtoGW).plot(ax=ax2,label='data',color='C1',linestyle='dashed',linewidth=0.9)
+
+    nmae1 = (m1.res_PG[gen]-gen_dic[area]['Thermal']*MWtoGW).abs().mean()/(gen_dic[area]['Thermal'].mean()*MWtoGW)
+    nmae2 = (m2.res_PG[gen]-gen_dic[area]['Thermal']*MWtoGW).abs().mean()/(gen_dic[area]['Thermal'].mean()*MWtoGW)
+
+    ax2.set_ylabel('GWh')
+    ax2.set_zorder(1)
+    ax2.grid()
+    # remove line breaks from ticks
+    from help_functions import compact_xaxis_ticks
+    compact_xaxis_ticks(f,ax2)
+    # ax1.legend([],title=self.plot_vals.annstr.format(irmse_rel,irmse),bbox_to_anchor=self.plot_vals.bbox)
+    ax2.legend(bbox_to_anchor=bbox,title=f'NMAE: \nweekly: {nmae1:0.2f}\navg: {nmae2:0.2f}')
+
+
+    #% inset
+    ax1.plot(m1.res_PG.loc[inset_idx,gen],label='m',color='C0')
+    ax1.plot(m2.res_PG.loc[inset_idx,gen],label='mavg',color='C2')
+    ax1.plot(gen_dic[area].loc[inset_idx,'Thermal']*MWtoGW,label='data',color='C1',linestyle='dashed',linewidth=0.9)
+
+    ax1.grid()
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter(myFmt))
+    ax1.set_ylabel('GWh')
+    ax1.xaxis.set_major_locator(mdates.DayLocator())
+
+    plt.savefig(Path(fig_path) / f'cost_compare_{area}.png')
+    plt.savefig(Path(fig_path) / f'cost_compare_{area}.eps')
+
+
+if __name__ == "__main__":
+    # plot_cost_compare_cases()
     # df = paper_results()
     pass
 
