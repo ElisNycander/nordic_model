@@ -556,7 +556,7 @@ def draw_model_map():
         'GB-NO':((449808,689891),(953064,1.07665e6)),
         'NL-DK':((974061,413992),(1.09594e6,632596)),
     }
-    under_construction = ['NL-DK','GB-NO']
+    under_construction = ['NL-DK']
 
     # label positions
     areas = {
@@ -722,7 +722,7 @@ def inflow_energiforetagen():
 if __name__ == "__main__":
 
 
-
+    draw_model_map()
     def main():
         pass
     # compare_maf_vs_entsoe_inflow_data('inflow2.db',fig_tag='inflow2')
